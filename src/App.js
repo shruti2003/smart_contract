@@ -15,7 +15,7 @@ function App() {
     const privateKey = "0x70260f0f752d6b509636c9abfea6f680a3f8023ef42086683b968c3760ac119e"; 
     const wallet = new ethers.Wallet(privateKey, provider);
     
-    const contractAddress = "0x19Be63204D9ccd8eC1C53Bd0c68b2D0AF872fF73"; // Verifier contract
+    const contractAddress = "0xA39BB4183617E1deA41A27818C711bdbb7c82e4E"; // Verifier contract
 
     const abi = [
         "function verifyAndClaim(address customer, uint256 apyThreshold, uint256 tvlThreshold) external",
