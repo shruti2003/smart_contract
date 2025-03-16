@@ -1,70 +1,82 @@
-# Getting Started with Create React App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# Axal On-Chain Reward Verification System
 
-## Available Scripts
+This project implements a simplified on-chain liquidity pool inspired by Aave, integrated with a custom ERC20 token and a verification contract to enable on-chain proof and reward distribution based on APY and TVL thresholds.
 
-In the project directory, you can run:
+## Deployed Contracts on Sepolia Testnet
 
-### `npm start`
+| Contract                     | Address                                                                                          | Description |
+|-----------------------------|--------------------------------------------------------------------------------------------------|-------------------------------------------------------------------|
+| AxalFakeCoin                 | [0xc41e956319306F3a7a91aD2617788615e4BA056C](https://sepolia.etherscan.io/address/0xc41e956319306F3a7a91aD2617788615e4BA056C) | Custom ERC20 token used for rewards and liquidity pool deposits. |
+| MiniAxalPool (Aave-inspired) | [0xc3E2fD9C33C42f6dae5ea6a4093A4C5844b1D786](https://sepolia.etherscan.io/address/0xc3E2fD9C33C42f6dae5ea6a4093A4C5844b1D786) | Simplified liquidity pool contract based on AavePool functionality. Tracks TVL and APY. |
+| AxalFrontendVerifier        | [0xA39BB4183617E1deA41A27818C711bdbb7c82e4E](https://sepolia.etherscan.io/address/0xA39BB4183617E1deA41A27818C711bdbb7c82e4E) | Verifier contract that reads APY and TVL live on-chain, checks thresholds, and triggers reward distribution. |
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Contract Relationships Overview
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```
+User Wallet
+    │
+    ├── Supplies AxalFakeCoin tokens → MiniAxalPool (TVL increases)
+    │
+    ├── Frontend → AxalFrontendVerifier (verifyAndClaim)
+    │            └── Reads TVL and APY from MiniAxalPool
+    │            └── Calls AxalFakeCoin.claimReward() on successful verification
+    │
+    └── Receives AxalFakeCoin rewards upon verification success
+```
 
-### `npm test`
+## Key Features
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+| Metric | Description |
+|---------|------------|
+| TVL (Total Value Locked) | Sum of AxalFakeCoin tokens locked in MiniAxalPool. |
+| APY (Annual Percentage Yield) | Set at deployment (basis points, e.g., 500 = 5%). |
+| Verification | Fully on-chain, handled by AxalFrontendVerifier, no off-chain servers. |
 
-### `npm run build`
+## Contract Usage Instructions
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 1. Supply Tokens to Increase TVL
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+First, approve the MiniAxalPool to spend your AxalFakeCoin tokens:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```solidity
+AxalFakeCoin.approve(0x41c0bAD9D7C1b74e71A26434BCFED7EEF3E718AB, amount);
+```
 
-### `npm run eject`
+Then supply tokens to the pool:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```solidity
+MiniAxalPool.supply(amount);
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+This action increases the TVL on-chain.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### 2. Claim Reward via Frontend Verifier
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Call the `verifyAndClaim()` function:
 
-## Learn More
+```solidity
+AxalFrontendVerifier.verifyAndClaim(customerAddress, apyThreshold, tvlThreshold);
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- Fetches live APY and TVL from MiniAxalPool.
+- Compares values against provided thresholds.
+- If conditions are met, triggers reward distribution from AxalFakeCoin.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### 3. View Contracts on Sepolia
 
-### Code Splitting
+- **AxalFakeCoin:**  
+[View on Etherscan](https://sepolia.etherscan.io/address/0xc41e956319306F3a7a91aD2617788615e4BA056C)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+- **MiniAxalPool (Aave-inspired):**  
+[View on Etherscan](https://sepolia.etherscan.io/address/0x41c0bAD9D7C1b74e71A26434BCFED7EEF3E718AB)
 
-### Analyzing the Bundle Size
+- **AxalFrontendVerifier:**  
+[View on Etherscan](https://sepolia.etherscan.io/address/0xeA6ae684DDa356a04C5caa237fc9bcA7E29a796F)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Based On
 
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+The MiniAxalPool contract is a simplified version of Aave's Pool contract:
+- Tracks total liquidity (TVL) and liquidity rate (APY).
+- Provides a `getReserveData()` function similar to Aave's original interface.
+- Suitable for testing and fully on-chain reward verification without relying on RPCs or external data feeds.
