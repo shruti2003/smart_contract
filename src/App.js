@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ethers } from "ethers";
+import './App.css'; // Import custom CSS
+
 
 function App() {
     const [walletBalance, setWalletBalance] = useState("");
@@ -15,11 +17,10 @@ function App() {
     const privateKey = "0x70260f0f752d6b509636c9abfea6f680a3f8023ef42086683b968c3760ac119e"; 
     const wallet = new ethers.Wallet(privateKey, provider);
     
-    const contractAddress = "0xA39BB4183617E1deA41A27818C711bdbb7c82e4E"; // Verifier contract
-
+    const contractAddress = "0xE3Ca443c9fd7AF40A2B5a95d43207E763e56005F"; 
     const abi = [
         "function verifyAndClaim(address customer, uint256 apyThreshold, uint256 tvlThreshold) external",
-        "function getCurrentPoolData() external view returns (uint256, uint256)" 
+        "function getCurrentPoolData() external view returns (uint256 tvlInUSD, uint256 apy)"
     ];
 
     const contract = new ethers.Contract(contractAddress, abi, wallet);
@@ -31,87 +32,44 @@ function App() {
     const tokenContract = new ethers.Contract(tokenAddress, tokenAbi, provider);
 
     useEffect(() => {
-      fetchBalance();
-      fetchCurrentPoolData(); // Add this call here to print when page loads
+        fetchBalance();
     }, []);
-  
 
-    // Fetch the balance of the customer
     const fetchBalance = async () => {
         try {
-            console.log(`🔎 Fetching balance for ${customerAddress}...`);
             const balance = await tokenContract.getBalance(customerAddress);
-            console.log(`✅ Current Balance: ${ethers.formatUnits(balance, 18)} AXAL`);
             setWalletBalance(ethers.formatUnits(balance, 18));
         } catch (error) {
-            console.error("❌ Error fetching balance:", error);
+            console.error("Error fetching balance:", error);
             setWalletBalance("Error!");
         }
     };
 
-    // Fetch current APY/TVL data from Verifier contract
-    const fetchCurrentPoolData = async () => {
-      try {
-          console.log(`🔎 Fetching current APY & TVL from pool at: ${contract.address}...`);
-          const [currentTVL, currentAPY] = await contract.getCurrentPoolData();
-  
-          console.log(`📊 Raw Pool Data:`, { currentTVL, currentAPY });
-  
-          // Convert BigInt to JS Number safely
-          const apyValue = Number(currentAPY);
-          const tvlValue = ethers.formatUnits(currentTVL, 18); // Already string formatted
-  
-          console.log(`✅ Pool APY: ${apyValue} basis points (${apyValue / 100}% APR)`);
-          console.log(`✅ Pool TVL: ${tvlValue} Tokens`);
-      } catch (error) {
-          console.error("❌ Error fetching pool data:", error);
-      }
-  };
-  
-  
-  
-
-    // Claim reward function
     const claimReward = async () => {
         if (!apy || !tvl) {
-            setResponse("❌ Please set APY and TVL thresholds!");
+            setResponse("❌ Set APY & TVL thresholds first!");
             return;
         }
 
-        console.log(`🚀 Starting reward claim...`);
-        console.log(`📊 Thresholds: APY >= ${apy}%, TVL >= ${tvl}`);
-        console.log(`📩 Calling verifyAndClaim with customer: ${customerAddress}`);
-
         setLoading(true);
-
         try {
             const tx = await contract.verifyAndClaim(customerAddress, parseFloat(apy), parseFloat(tvl));
-            console.log(`⏳ Transaction sent: ${tx.hash}`);
             await tx.wait();
-            console.log(`✅ Transaction confirmed: ${tx.hash}`);
-
-            await fetchCurrentPoolData(); // <-- Fetch updated pool data
-
 
             setTxHash(tx.hash);
-            setResponse(`✅ Reward Claimed!`);
-
-            // Update balance UI instantly
+            setResponse(`Reward Claimed!`);
             setWalletBalance((prevBalance) => (parseFloat(prevBalance) + 10).toFixed(2));
-
-            // Fetch actual updated balance in the background
             setTimeout(fetchBalance, 5000);
         } catch (error) {
-            console.error("❌ Error:", error);
+            console.error("Error:", error);
             setResponse(`${error.reason || "❌ Transaction failed!"}`);
         }
-
         setLoading(false);
     };
 
     return (
         <div className="app-container">
-            <h1 className="title">AxalFakeCoin Reward Portal</h1>
+            <h1 className="title">Axal Reward Portal</h1>
 
             <div className="input-group">
                 <label>APY Threshold: {apy}%</label>
@@ -136,20 +94,15 @@ function App() {
                 />
             </div>
 
-            <p className="balance">Customer Wallet Balance: <span>{walletBalance} AXAL</span></p>
+            <p className="balance">Wallet Balance: <span>{walletBalance} AXAL</span></p>
 
-            <button
-                className="claim-btn"
-                onClick={claimReward}
-                disabled={loading}
-            >
+            <button className="claim-btn" onClick={claimReward} disabled={loading}>
                 {loading ? "Processing..." : "Claim Ticket"}
             </button>
 
             {response && (
                 <div className="response-container">
                     <p className={response.includes("❌") ? "error-text" : "success-text"}>{response}</p>
-                    
                     {txHash && (
                         <p>
                             <a 
@@ -158,7 +111,7 @@ function App() {
                                 rel="noopener noreferrer"
                                 className="etherscan-link"
                             >
-                                View Transaction on Sepolia Etherscan
+                                View on Etherscan
                             </a>
                         </p>
                     )}
