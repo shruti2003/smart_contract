@@ -1,23 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { ethers } from "ethers";
-import './App.css'; // Import custom CSS
+import './App.css'; 
 
 
 function App() {
     const [walletBalance, setWalletBalance] = useState("");
     const [response, setResponse] = useState("");
-    const [apy, setApy] = useState(5); // Default APY
-    const [tvl, setTvl] = useState(5000); // Default TVL
+    const [apy, setApy] = useState(5); 
+    const [tvl, setTvl] = useState(5000); 
     const [loading, setLoading] = useState(false); 
     const [txHash, setTxHash] = useState(""); 
 
-    const customerAddress = "0x1422CF65ee6918eADF2C43a0835e155faed7d707"; 
-    const provider = new ethers.JsonRpcProvider("https://eth-sepolia.g.alchemy.com/v2/ty7tEtuPQNYCUEzZS09lxVqfcPpmBP7j");
+    const customerAddress = process.env.REACT_APP_CUSTOMER_ADDRESS;
+    const provider = new ethers.JsonRpcProvider(process.env.REACT_APP_ALCHEMY_URL);
 
-    const privateKey = "0x70260f0f752d6b509636c9abfea6f680a3f8023ef42086683b968c3760ac119e"; 
+    const privateKey = process.env.REACT_APP_PRIVATE_KEY; 
     const wallet = new ethers.Wallet(privateKey, provider);
     
-    const contractAddress = "0xE3Ca443c9fd7AF40A2B5a95d43207E763e56005F"; 
+    const contractAddress = process.env.REACT_APP_CUSTOMER_ADDRESS; 
     const abi = [
         "function verifyAndClaim(address customer, uint256 apyThreshold, uint256 tvlThreshold) external",
         "function getCurrentPoolData() external view returns (uint256 tvlInUSD, uint256 apy)"
@@ -25,7 +25,7 @@ function App() {
 
     const contract = new ethers.Contract(contractAddress, abi, wallet);
 
-    const tokenAddress = "0xc41e956319306F3a7a91aD2617788615e4BA056C"; 
+    const tokenAddress = process.env.REACT_APP_TOKEN_CONTRACT; 
     const tokenAbi = [
         "function getBalance(address user) external view returns (uint256)"
     ];
