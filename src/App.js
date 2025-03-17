@@ -17,7 +17,12 @@ function App() {
     const privateKey = process.env.REACT_APP_PRIVATE_KEY; 
     const wallet = new ethers.Wallet(privateKey, provider);
     
+<<<<<<< HEAD
     const contractAddress = process.env.REACT_APP_CUSTOMER_ADDRESS; 
+=======
+    const contractAddress = "0x19Be63204D9ccd8eC1C53Bd0c68b2D0AF872fF73"; // Verifier contract
+
+>>>>>>> parent of 48d1373 (updated contracts)
     const abi = [
         "function verifyAndClaim(address customer, uint256 apyThreshold, uint256 tvlThreshold) external",
         "function getCurrentPoolData() external view returns (uint256 tvlInUSD, uint256 apy)"
